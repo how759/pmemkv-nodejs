@@ -89,12 +89,12 @@ db::db(const Napi::CallbackInfo& info) : Napi::ObjectWrap<db>(info), _db() {
         if (value.IsString()){
             auto status = cfg.put_string(key.As<Napi::String>().Utf8Value(), value.As<Napi::String>().Utf8Value());
 	        if (status != pmem::kv::status::OK)
-                Napi::Error::New(env, "invalid config object").ThrowAsJavaScriptException();
+                Napi::Error::New(env, pmem::kv::db::errormsg()).ThrowAsJavaScriptException();
         }
         else if (value.IsNumber()){
             auto status = cfg.put_uint64(key.As<Napi::String>().Utf8Value(), value.As<Napi::Number>().Uint32Value());
             if (status != pmem::kv::status::OK)
-                Napi::Error::New(env, "invalid config object").ThrowAsJavaScriptException();
+                Napi::Error::New(env, pmem::kv::db::errormsg()).ThrowAsJavaScriptException();
         }
         else {
             Napi::Error::New(env, "not implemented").ThrowAsJavaScriptException();
@@ -104,7 +104,7 @@ db::db(const Napi::CallbackInfo& info) : Napi::ObjectWrap<db>(info), _db() {
 
     auto status = this->_db.open(engine.c_str(), std::move(cfg));
     if (status != pmem::kv::status::OK)
-        Napi::Error::New(env, "pmemkv_open() failed").ThrowAsJavaScriptException();
+        Napi::Error::New(env, pmem::kv::db::errormsg()).ThrowAsJavaScriptException();
 }
 
 Napi::Value db::stop(const Napi::CallbackInfo& info) {
@@ -247,7 +247,7 @@ Napi::Value db::get(const Napi::CallbackInfo& info) {
     else if (status == pmem::kv::status::NOT_FOUND) {
         return env.Undefined();
     } else if (status == pmem::kv::status::FAILED) {
-        Napi::Error::New(env, "Unable to get key").ThrowAsJavaScriptException();
+        Napi::Error::New(env, pmem::kv::db::errormsg()).ThrowAsJavaScriptException();
     }
     return Napi::Value();
 }
@@ -257,7 +257,7 @@ Napi::Value db::put(const Napi::CallbackInfo& info) {
     std::string key = info[0].As<Napi::String>().Utf8Value();
     std::string value = info[1].As<Napi::String>().Utf8Value();
     pmem::kv::status status = this->_db.put(key, value);
-    if (status == pmem::kv::status::FAILED) Napi::Error::New(env, "Unable to put key").ThrowAsJavaScriptException();
+    if (status == pmem::kv::status::FAILED) Napi::Error::New(env, pmem::kv::db::errormsg()).ThrowAsJavaScriptException();
     return Napi::Value();
 }
 
@@ -265,6 +265,6 @@ Napi::Value db::remove(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
     std::string key = info[0].As<Napi::String>().Utf8Value();
     pmem::kv::status status = this->_db.remove(key);
-    if (status == pmem::kv::status::FAILED) Napi::Error::New(env, "Unable to remove key").ThrowAsJavaScriptException();
+    if (status == pmem::kv::status::FAILED) Napi::Error::New(env, pmem::kv::db::errormsg()).ThrowAsJavaScriptException();
     return Napi::Boolean::New(env, (status == pmem::kv::status::OK));
 }
