@@ -90,13 +90,7 @@ db::db(const Napi::CallbackInfo& info) : Napi::ObjectWrap<db>(info), _db() {
     std::string engine = info[0].As<Napi::String>().Utf8Value();
     Napi::Object config = info[1].As<Napi::Object>();
     Napi::Array props = config.GetPropertyNames();
-
-    // TODO: remove when empty config is supported
-    if (props.Length() == 0){
-        Napi::Error::New(env, "invalid config object").ThrowAsJavaScriptException();
-        return;
-    }
-
+    
     pmem::kv::config cfg;
     for (uint32_t i = 0; i < props.Length(); ++i) {
         Napi::Value key = props.Get(i);
